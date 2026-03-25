@@ -3,6 +3,7 @@ import { UserModel } from "../models/User.js";
 import { hashValue, compareHash } from "../utils/hash.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js";
 import { AppError } from "../utils/appError.js";
+import { env } from "../config/env.js";
 
 const parseTtlMs = (ttl) => {
   const match = ttl.match(/^(\d+)([smhd])$/i);
@@ -19,13 +20,17 @@ export const registerUser = async ({ email, password, fullName, role }) => {
     throw new AppError("Email already in use", 409);
   }
 
+  if (role === "ADMIN" && env.PAYMENT_MODE !== "demo") {
+    throw new AppError("Admin signup is disabled", 403);
+  }
+
   const passwordHash = await hashValue(password);
 
   const user = await UserModel.create({
     email,
     passwordHash,
     fullName,
-    role: role || "USER"
+    role: role === "ADMIN" && env.PAYMENT_MODE === "demo" ? "ADMIN" : "USER"
   });
 
   return user;

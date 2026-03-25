@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
 
+const ENABLE_ADMIN_SIGNUP = import.meta.env.VITE_ENABLE_ADMIN_SIGNUP === "true";
+
 export const RegisterPage = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -14,7 +16,11 @@ export const RegisterPage = () => {
     setError("");
     setLoading(true);
     try {
-      await register(form);
+      const payload = ENABLE_ADMIN_SIGNUP
+        ? form
+        : { fullName: form.fullName, email: form.email, password: form.password, role: "USER" };
+
+      await register(payload);
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
@@ -53,18 +59,20 @@ export const RegisterPage = () => {
           required
           minLength={8}
         />
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700">Account Role</label>
-          <select
-            className="input"
-            value={form.role}
-            onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
-          >
-            <option value="USER">User</option>
-            <option value="ADMIN">Admin</option>
-          </select>
-          <p className="text-xs text-slate-500">For demo/testing only. Choose Admin to access /admin panel.</p>
-        </div>
+        {ENABLE_ADMIN_SIGNUP && (
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-700">Account Role</label>
+            <select
+              className="input"
+              value={form.role}
+              onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
+            >
+              <option value="USER">User</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+            <p className="text-xs text-slate-500">Demo mode only: choose Admin to access /admin panel.</p>
+          </div>
+        )}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         <button className="btn-primary w-full" disabled={loading}>
           {loading ? "Creating account..." : "Register"}
