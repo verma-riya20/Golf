@@ -1,6 +1,6 @@
 import { Router } from "express";
 import charityController from "../controllers/charity.controller.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAdmin, requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -12,10 +12,10 @@ router.get("/:charityId", charityController.getCharity);
 // Protected routes
 router.use(requireAuth);
 
-router.post("/", charityController.createCharity);
-router.put("/:charityId", charityController.updateCharity);
-router.delete("/:charityId", charityController.deleteCharity);
 router.post("/select", charityController.selectCharityForUser);
-router.get("/stats/admin", charityController.getCharityStats);
+router.post("/", requireAdmin, charityController.createCharity);
+router.put("/:charityId", requireAdmin, charityController.updateCharity);
+router.delete("/:charityId", requireAdmin, charityController.deleteCharity);
+router.get("/stats/admin", requireAdmin, charityController.getCharityStats);
 
 export default router;
