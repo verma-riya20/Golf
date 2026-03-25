@@ -13,7 +13,7 @@ const parseTtlMs = (ttl) => {
   return value * multipliers[unit];
 };
 
-export const registerUser = async ({ email, password, fullName }) => {
+export const registerUser = async ({ email, password, fullName, role }) => {
   const existing = await UserModel.findOne({ email });
   if (existing) {
     throw new AppError("Email already in use", 409);
@@ -24,7 +24,8 @@ export const registerUser = async ({ email, password, fullName }) => {
   const user = await UserModel.create({
     email,
     passwordHash,
-    fullName
+    fullName,
+    role: role || "USER"
   });
 
   return user;
