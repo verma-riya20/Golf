@@ -12,10 +12,27 @@ import { errorHandler, notFound } from "./middleware/errorHandler.js";
 
 export const app = express();
 
+const normalizeOrigin = (origin) => origin?.replace(/\/$/, "");
+const allowedOrigins = env.CORS_ORIGIN.split(",")
+  .map((origin) => normalizeOrigin(origin.trim()))
+  .filter(Boolean);
+
 app.use(helmet());
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow requests with no origin header (e.g., health checks, server-to-server calls).
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalized = normalizeOrigin(origin);
+      if (allowedOrigins.includes(normalized)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS origin not allowed: ${origin}`));
+    },
     credentials: true
   })
 );
